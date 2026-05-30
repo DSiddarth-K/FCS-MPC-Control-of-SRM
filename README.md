@@ -1,2 +1,197 @@
-# FCS-MPC-Control-of-SRM
-Single Finite Control Set MPC Control for an SRM with Asymmetric NPC 3-level Converter to Minimize Current Ripple
+# Single Finite Control Set MPC Control for an SRM With Asymmetric NPC 3-level Converter to Minimize Current Ripple
+
+**Siddarth Kachu**
+
+## Abstract
+
+This paper covers the design of an MPC for an asymmetric NPC to control an SRM motor. The MPC was built and simulated in Simulink/Matlab. The model involves a discrete model of the SRM and the NPC inverter to calculate the next step current based on possible switching states. The best switching state is selected based on the cost function minimization and the weights of the terms. This switching state is applied to the Asymmetric NPC and the current is then calculated with a model of the SRM. The current profile from the controller is compared to the standard hysteresis controller for SRMs, and a PWM method proposed in [3]. It is found that while the MPC performs better than the hysteresis controller, the current ripple is not less than the PWM method for the same switching frequency, but the controller still shows promise for specific applications due to the freedom for the designer to select switching states based on various parameters.
+
+# I. INTRODUCTION
+
+## A. SRM Motor and Converter
+
+With the increasing demand for electrification and a supply chain not prepared for the demand, SRMs have emerged as a potential replacement for PMSMs. These motors have no permanent magnets and are only made of electrical steel and copper. The stator of the motor has poles with copper windings and the rotor, only steel poles. When a pole is energized, it generates a magnetic field that magnetizes a rotor pole, attracting the pole to the coil [1]. This process is repeated for all the poles on the stator causing the rotor to spin. This motor has phases that are isolated from each other, the number of phases being dependent on the pole configuration [1]. Each phase is controlled with an asymmetric bridge leg that energizes the coil with switches or freewheels to allow for the current to drop and has diodes to carry current back to the source [1].
+
+**Fig 1.A.1. Single phase of asymmetric bridge converter [1]**
+
+This converter allows for control of flux as it is proportional to the number of turns multiplied by the current squared, which is directly proportional to torque [1].
+
+## B. NPC
+
+The neutral point clamped inverter is a multilevel inverter topology that uses midpoints in the DC link capacitor bank along with clamping diode to apply additional voltage levels across the load. This topology allows for the use of lower rated components since each switch will only need to be rated for Vd/2 if there is one neutral point. This topology also provides good THD performance due to being capable of applying Vd, Vd/2, 0, -Vd/2, -Vd for the topology in Fig.1.B.1. The number of levels can be increased based on the number of neutral points, but this increases the difficulty in balancing the capacitor.
+
+**Fig 1.B.1 Single phase leg of NPC inverter [2]**
+
+## C. MPC
+
+Model predictive control allows for the control of an inverter using a model of the inverter. The current time step current output measurements are input into a discrete model of the inverter, which outputs the next time step current into a cost function [2]. A current reference is extrapolated into the next time step current reference and input into the cost function; The cost function takes all the possible current values for the various switch configurations and determines what the best possible switching state is and applies it [2]. The best switching state is determined by using a minimizing equation with the desired parameters. This method, for example, can be used to balance capacitor charge in an NPC or NNPC inverter by weighing the capacitor voltages higher than the current.
+
+# II. APPROACH
+
+## A. SRM Model
+
+To model this controller, a static analysis on an SRM motor must be completed to collect data to use in the modelling experiment. Motor geometry is created based on the paper [3] with the available information. Geometry in Fig. 2.1
+
+**Fig 2.A.1. 12/8 SRM model created in JMAG [2]**
+
+This motor geometry has 3-phase parallel coil configuration with 4 coils per phase. The A-phase is energized with 0 to 46 A in 2 A increment steps to collect a robust data set to run the dynamic analysis with. The experiment provides torque, flux linkage and induced voltage characteristics of the motor. These values are used to create lookup tables for the SRM model in MATLAB.
+
+The modelling of this controller involves 3 models. The first model is a model of the SRM. The SRM model is based off the lecture notes in [1].
+
+**Fig 2.A.2. Electrical Angle of 3 SRM phases**
+
+First the electrical angle is calculated based on the 2000RPM operation speed specified in [3]. This outputs the electrical angles of each phase.
+
+**Fig 2.A.3. Excitation signal generator**
+
+Based on the electrical angle, the turn on/off angles excitation signals are generated based on the lecture notes in [1].
+
+**Fig 2.A.4. Phase Current Calculation**
+
+The final aspect of the SRM model is the current calculation. The difference between the measured phase voltage and the phase current times the phase resistance is calculated. The phase current is calculated by using a lookup table with the electrical angle and flux linkage breakpoints. The result is the phase flux linkage that builds up and decays with electrical angle. The phase currents from the lookup table are also sampled (at 50Khz in this case) and input into the MPC model.
+
+## B. MPC Model
+
+The asymmetric NPC discrete model takes the current time step phase current which is output from the SRM model. The phase flux linkage, electrical angle and excitation signal are also input into the block. The model generates a vector of the possible next step phase voltages as listed in the Uoutput column of Table 2.B.1.
+
+### Table 2.B.1. Switching states of 5 Level Asymmetric NPC
+
+| State | S1 | S2 | S3 | S4 | Uoutput |
+| ----- | -- | -- | -- | -- | ------- |
+| 1     | 1  | 1  | 1  | 1  | Vdc     |
+| 2     | 1  | 1  | 1  | 0  | 0.5Vdc  |
+| 3     | 1  | 1  | 0  | 0  | 0       |
+| 4     | 0  | 1  | 1  | 1  | 0.5Vdc  |
+| 5     | 0  | 1  | 1  | 0  | 0       |
+| 6     | 0  | 1  | 0  | 0  | -0.5Vdc |
+| 7     | 0  | 0  | 1  | 1  | 0       |
+| 8     | 0  | 0  | 1  | 0  | -0.5Vdc |
+| 9     | 0  | 0  | 0  | 0  | -Vdc    |
+
+There are 2 possible states for 0.5Vdc, -0.5Vdc and 3 possible states for applying 0 V, these redundant states allow for better control of the charge of the capacitors as they can either charge or discharge the DC link capacitors based on the direction of the current. For example, from table 2.B.1 state 2 will result in the midpoint increasing in charge as current is flowing into the midpoint, but state 4 results in a discharge of the capacitor as the current is flowing out of the midpoint. Although the redundant states are not used in this experiment, they will be accounted for in the vector for possible future implementations.
+
+**Fig. 2.B.2. Next step Electrical angle and Flux Linkage**
+
+The next step electrical angle is calculated using the following equation:
+
+∅(k + n) = ∅(k) + nωT = ∅(k) + n(Nrpm · 360/60)T
+
+Where n, the size of the step, which will allow for the calculation to account for different decision intervals chosen. Since the possible voltages are stored in a vector of 9, the electrical angles are also stored in a vector of size 9.
+
+The next step flux linkage is calculated using the following equation:
+
+λ(k + n) = λ(k) + nT(V − IR)
+
+These next step values are input into the current lookup table from Fig 2.A.4 to get a vector of 9 possible I(K+n) values based on the possible switching configurations.
+
+**Fig. 2.B.3. Using look up table to calculate I(K+n)**
+
+This vector is output into the cost function to determine the best possible switch stare based on the set weightings from the current minimization and applies the associated switching states.
+
+**Fig. 2.B.4. Cost function calculation block**
+
+The 9 possible currents are subtracted from the reference current and squared. The smallest of the differences are indexed and selected by taking the largest index, since there are no other costs being considered for this experiment. Based on the vector index, the associated switching state is applied. This switching state is only applied when the excitation signal is high. When the excitation signal is low, the phase needs to be de-energized, so a negative voltage needs to be applied to drive current to 0, then a 0 V switching state needs to be applied. A new switching state is only applied after a certain number of samples; this is synced with the electrical angle and flux calculations. This allows for control of switching frequency for a reasonable comparison of performance. The cost function block outputs the states of the switches.
+
+## C. Asymmetric 3-Level NPC
+
+To properly control an SRM with an NPC converter, the proposed Asymmetric 3-Level NPC topology (Fig. 2.C.1) in [3] is used in this model.
+
+**Fig. 2.C.1. Single phase leg of Asymmetric 3-Level NPC**
+
+This topology adds freewheeling diodes to the NPC which are necessary to apply 0 V across the phase and for proper current regulation. There is a current source to simulate the coil of the SRM, controlled by the output of the “Phase Current Calculation” block in the SRM model. There is a voltage sensor measuring the phase voltage which is the input of the “Phase Current Calculation.” The DC-link capacitors are modelled with voltage sources, as capacitor balancing is not the focus of this experiment.
+
+In addition to the 3 segments of the model, there is a simple fourth-order Lagrange extrapolation block to extrapolate the current reference. There is logic to increase the current reference to test the transient performance.
+
+# III. ALTERNATIVE CONTROL METHODS
+
+SRMs use a basic hysteresis controller with an asymmetric bridge converter, this will be used as a benchmark for the performance of the MPC controller. Hysteresis controllers apply Vdc to increase the current and -Vdc or 0 to decrease the current and maintain it within a set band. If the band is too small, it will increase the switching frequency, as the current will hit the band limit more often and need to switch, which will increase the losses of the inverter. Too large of a band will make the current ripple very large and reduce the torque quality. The same motor static characteristics will be applied to the hysteresis controller based on [1]. The current profiles from this controller will be compared to those of the MPC. Since the hysteresis controller only applies 3 levels a clear improvement is expected with the 5 levels available to the MPC controller with asymmetric NPC.
+
+The MPC controller can also be compared to the proposed PWM modulation scheme for the asymmetric NPC converter in [3]. This method works by using 4 triangular carrier waves between each of the 5 voltage levels of the asymmetric NPC. The voltage that needs to be applied to the phases will be compared to the carrier waveforms. The inverter will apply the voltage level above and below the triangular wave based on if the reference voltage is higher or lower than the carrier [3]. This method resulted in a peak-to-peak current ripple of only 3A, with a switching frequency of 10Khz. This is the target to compare the proposed controller with.
+
+# IV. SIMULATION RESULTS
+
+## A. Hysteresis Controller
+
+The following results are the output of the hysteresis controller designed in [1]. With a 2% hysteresis band, using soft switching scheme. Hard switching resulted in higher steady state ripple, worse transient ripples and much higher switching frequency.
+
+**Fig 3.A.1. Phase Voltage and Current Overlayed at 20A**
+
+**Fig 3.A.2. Current Ripple at 20A**
+
+With the hysteresis controller, there are large current spikes during the initial magnetization phase where the phase voltage is applied. There is a max current ripple of around 8A, with the soft switching controller with a reference current of 20A.
+
+**Fig 3.A.3. Phase Voltage and Current Overlayed at 40A**
+
+**Fig 3.A.4. Current Ripple at 40A**
+
+With a reference current of 40A, there is a max ripple of around 8A. There is a smaller overshoot from the initial magnetization but the controller struggles to maintain the reference of 40A and overshoots often.
+
+**Fig 3.A.5. Current Transient**
+
+The controller also has a significant overshoot during transients.
+
+## B. MPC Controller
+
+The MPC controller decides and selects a new switching configuration every sample period. This can make the switching frequency very high and impractical, the results for when the decision is limited to every 10Khz, 50Khz and no limit are collected.
+
+**Fig 3.B.1. Current Ripple at 20A and 40A at 10Khz**
+
+Due to the controller making decisions and applying the switch configuration at 10Khz, the current waveform has very high ripple at both current levels and transients. There is a max ripple of 11A and 16A at 20 and 40A respectively. The initial magnetization at 40A was also difficult to regulate when the controller was forced to this low switching speed.
+
+**Fig 3.B.2. Phase Voltage and Current Overlayed at 20A, 50Khz**
+
+When the controller was forced to switch at 50Khz, the waveforms smoothed, and current looked much more stable.
+
+**Fig 3.B.3. Current Ripple at 20A, 50Khz**
+
+There is no overshoot with this controller at 20A, but it does not reach the reference current value in the initial magnetization. The max ripple was 3.5A.
+
+**Fig 3.B.4. Phase Voltage and Current Overlayed at 40A, 50Khz**
+
+At 40A, the controller switched more often than at 20A.
+
+**Fig 3.B.5. Current Ripple at 40A, 50Khz**
+
+The initial magnetization does not result in the current meeting the reference value, the peak ripple was 8A.
+
+**Fig 3.B.6. Current Transient, 50Khz**
+
+The current transient does not result in any overshoots.
+
+**Fig 3.B.7. Phase Voltage and Current Overlayed at 40A**
+
+Where the controller is not limited to a certain switching/decision frequency, it has a very high switching frequency.
+
+**Fig 3.B.8. Current Ripple at 20A**
+
+The max current ripple at 20A is less than 0.5A, there is very little ripple at all.
+
+**Fig 3.B.9. Current Ripple at 40A**
+
+At 40A, there is a max current ripple of 0.5A.
+
+**Fig 3.B.10. Current Transients**
+
+The transient current waveforms are also very smooth and have a ripple of less than 1A.
+
+# V. DISCUSSION
+
+The MPC can perform very well, it performs better than the hysteresis controller when not limited to lower switching frequencies. Since motor properties such as physical design and inductance vary, this will determine how quickly the current decays, so the switching frequency can vary with the motor. For a 2% hysteresis band, it was noted that the hysteresis controller has a switching frequency of around 50Khz, for the SRM motor at 2000rpm. When compared to the MPC limited to 50Khz, it outperformed the hysteresis controller with less max ripple at both current values. In addition to the controller, having access to the 5 voltage levels of the NPC over the 3 of the asymmetric bridge was extremely beneficial to the ripple. Since there were 5 levels, the controller often chose to use Vdc and -Vdc levels to magnetize and demagnetize quicker while using the 0.5Vdc, 0, -0.5Vdc to regulate the current at the reference, with less ripple since there the current will increase slower with a lower voltage.
+
+Although, The MPC could not maintain the current with less ripple than the proposed modulation scheme presented in [3], as there was a peak-to-peak ripple of 3A at a switching frequency of 10Khz. The MPC was only able to achieve a ripple that was low when the switching frequency was limited to 50Khz. The MPC can definitely perform better than the proposed modulation scheme when no limit is set, but this is not a fair comparison as a switching frequency of up to 500khz+ is not practical. It would be possible to add a cost function where there is no limit set, but switching to a different state is weighed as a method to discourage switching often. This would decrease the switching frequency and reduce losses while not limiting the controller to switching and making a decision at a set frequency.
+
+# VI. CONCLUSION
+
+Based on the results found, the MPC was not as effective as the proposed PWM method alongside the asymmetric NPC converter, although, it still has performance improvements over the basic hysteresis controller.
+
+First, it has significantly better performance than the basic hysteresis controller but requires 2 more switches, and 2 more didoes per phase. The additional 2 levels provided with these devices pay off in the current response and should be used if the torque quality is critical. Additionally, MPC control is much better when switching around the same frequency.
+
+The MPC control did not have lower ripple than the PWM control method with the same converter but can still have an application specific use case. The PWM controller is simple and can operate at a very low fixed frequency which might be desired in cases where efficiency is critical as higher frequency switching will generate losses and heat. When, higher frequency switching is possible, MPC can be chosen as it performs better, with the benefits of the cost function. In this experiment the cost function only consists of one term, the current. This cost function applies the voltage that minimizes the current in the next step, but this means that the cost function aspect of the MPC was underutilized. The MPC can be designed to focus on a specific application easily. For example, the cost function could include the state of the capacitor charge which was excluded in this experiment. This would allow for the controller to pick the redundant states that best balance the capacitor, without SVM. Another possible function could be to further reduce torque ripple by implementing torque sharing functions and weighing the minimization between the torque and the torque profile from the next step. The controller could also be expanded to 2 steps, for better control as this accounts for the states of the SRM and inverter for the next two time steps and provide more options but will get computationally expensive as this requires calculating the currents for the next two time steps for all possible phase voltages applied over those two steps. The controller could also be modified to choose the same switching state more often to naturally lower the switching frequency or favors a state that balances the load on the switches. For example, going from state 5 to 6 is the same as going from 5 to 8, but these states can be alternated to balance the load between both the switches. To conclude, the MPC is more complex and computationally expensive but can be designed for specific applications and can perform better than a hysteresis controller or make up for the loss in performance relative to the PWM controller with the versatility in design.
+
+# REFERENCES
+
+[1] B Bilgin. (2025). ECE 716 Switched Reluctance Machines – Converters in Switched Reluctance Machines [PowerPoint slides]
+
+[2] M. Narimani and B. Wu. (2025). Topic 8 – Other Multilevel Inverter [PowerPoint slides]
+
+[3] F. Peng, J. Ye and A. Emadi, "An Asymmetric Three-Level Neutral Point Diode Clamped Converter for Switched Reluctance Motor Drives," in IEEE Transactions on Power Electronics, vol. 32, no. 11, pp. 8618-8631, Nov. 2017, doi: 10.1109/TPEL.2016.2642339.

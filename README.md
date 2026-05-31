@@ -12,10 +12,9 @@ This paper covers the design of an MPC for an asymmetric NPC to control an SRM m
 
 With the increasing demand for electrification and a supply chain not prepared for the demand, SRMs have emerged as a potential replacement for PMSMs. These motors have no permanent magnets and are only made of electrical steel and copper. The stator of the motor has poles with copper windings and the rotor, only steel poles. When a pole is energized, it generates a magnetic field that magnetizes a rotor pole, attracting the pole to the coil [1]. This process is repeated for all the poles on the stator causing the rotor to spin. This motor has phases that are isolated from each other, the number of phases being dependent on the pole configuration [1]. Each phase is controlled with an asymmetric bridge leg that energizes the coil with switches or freewheels to allow for the current to drop and has diodes to carry current back to the source [1].
 
-<p align="center"><img width="232" height="175" alt="image" src="https://github.com/user-attachments/assets/f638ffb7-d36c-4c92-886c-0293be4d1d1b" /></p>
-
+<p align="center"><img width="232" height="175" alt="image" src="https://github.com/user-attachments/assets/f638ffb7-d36c-4c92-886c-0293be4d1d1b" />
 **Fig 1.A.1. Single phase of asymmetric bridge converter [1]**
-
+</p>
 This converter allows for control of flux as it is proportional to the number of turns multiplied by the current squared, which is directly proportional to torque [1].
 
 ## B. NPC

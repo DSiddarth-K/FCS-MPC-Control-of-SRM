@@ -12,17 +12,19 @@ This paper covers the design of an MPC for an asymmetric NPC to control an SRM m
 
 With the increasing demand for electrification and a supply chain not prepared for the demand, SRMs have emerged as a potential replacement for PMSMs. These motors have no permanent magnets and are only made of electrical steel and copper. The stator of the motor has poles with copper windings and the rotor, only steel poles. When a pole is energized, it generates a magnetic field that magnetizes a rotor pole, attracting the pole to the coil [1]. This process is repeated for all the poles on the stator causing the rotor to spin. This motor has phases that are isolated from each other, the number of phases being dependent on the pole configuration [1]. Each phase is controlled with an asymmetric bridge leg that energizes the coil with switches or freewheels to allow for the current to drop and has diodes to carry current back to the source [1].
 
-<p align="center"><img width="232" height="175" alt="image" src="https://github.com/user-attachments/assets/f638ffb7-d36c-4c92-886c-0293be4d1d1b" />
-**Fig 1.A.1. Single phase of asymmetric bridge converter [1]**
-</p>
+<div align="center"><img width="232" height="175" alt="image" src="https://github.com/user-attachments/assets/f638ffb7-d36c-4c92-886c-0293be4d1d1b"/>
+
+  **Fig 1.A.1. Single phase of asymmetric bridge converter [1]**</div>
+  
 This converter allows for control of flux as it is proportional to the number of turns multiplied by the current squared, which is directly proportional to torque [1].
 
 ## B. NPC
 
 The neutral point clamped inverter is a multilevel inverter topology that uses midpoints in the DC link capacitor bank along with clamping diode to apply additional voltage levels across the load. This topology allows for the use of lower rated components since each switch will only need to be rated for Vd/2 if there is one neutral point. This topology also provides good THD performance due to being capable of applying Vd, Vd/2, 0, -Vd/2, -Vd for the topology in Fig.1.B.1. The number of levels can be increased based on the number of neutral points, but this increases the difficulty in balancing the capacitor.
 
-**Fig 1.B.1 Single phase leg of NPC inverter [2]**
+<div align="center"><img width="312" height="310" alt="image" src="https://github.com/user-attachments/assets/1b846a0f-98c9-419b-a62f-97212e274724" />
 
+  **Fig 1.B.1 Single phase leg of NPC inverter [2]**</div>
 ## C. MPC
 
 Model predictive control allows for the control of an inverter using a model of the inverter. The current time step current output measurements are input into a discrete model of the inverter, which outputs the next time step current into a cost function [2]. A current reference is extrapolated into the next time step current reference and input into the cost function; The cost function takes all the possible current values for the various switch configurations and determines what the best possible switching state is and applies it [2]. The best switching state is determined by using a minimizing equation with the desired parameters. This method, for example, can be used to balance capacitor charge in an NPC or NNPC inverter by weighing the capacitor voltages higher than the current.
@@ -33,21 +35,29 @@ Model predictive control allows for the control of an inverter using a model of 
 
 To model this controller, a static analysis on an SRM motor must be completed to collect data to use in the modelling experiment. Motor geometry is created based on the paper [3] with the available information. Geometry in Fig. 2.1
 
-**Fig 2.A.1. 12/8 SRM model created in JMAG [2]**
+<div align="center"><img width="265" height="262" alt="image" src="https://github.com/user-attachments/assets/5aaf3c28-d5d8-4244-82bb-c1e3627f5349" />
+
+**Fig 2.A.1. 12/8 SRM model created in JMAG [2]**</div>
 
 This motor geometry has 3-phase parallel coil configuration with 4 coils per phase. The A-phase is energized with 0 to 46 A in 2 A increment steps to collect a robust data set to run the dynamic analysis with. The experiment provides torque, flux linkage and induced voltage characteristics of the motor. These values are used to create lookup tables for the SRM model in MATLAB.
 
 The modelling of this controller involves 3 models. The first model is a model of the SRM. The SRM model is based off the lecture notes in [1].
 
-**Fig 2.A.2. Electrical Angle of 3 SRM phases**
+<div align="center"><img width="1301" height="544" alt="image" src="https://github.com/user-attachments/assets/00f1eef2-c446-4119-a6d6-b7ed8b213b80" />
+
+**Fig 2.A.2. Electrical Angle of 3 SRM phases**</div>
 
 First the electrical angle is calculated based on the 2000RPM operation speed specified in [3]. This outputs the electrical angles of each phase.
 
-**Fig 2.A.3. Excitation signal generator**
+<div align="center"><img width="1151" height="620" alt="image" src="https://github.com/user-attachments/assets/c4901efd-04fc-4ea4-90c6-cf24cf4f0c71" />
+
+**Fig 2.A.3. Excitation signal generator**</div>
 
 Based on the electrical angle, the turn on/off angles excitation signals are generated based on the lecture notes in [1].
 
-**Fig 2.A.4. Phase Current Calculation**
+<div align="center"><img width="1006" height="241" alt="image" src="https://github.com/user-attachments/assets/257fa383-32a6-4880-8c66-3dbabf6b066c" />
+
+**Fig 2.A.4. Phase Current Calculation**</div>
 
 The final aspect of the SRM model is the current calculation. The difference between the measured phase voltage and the phase current times the phase resistance is calculated. The phase current is calculated by using a lookup table with the electrical angle and flux linkage breakpoints. The result is the phase flux linkage that builds up and decays with electrical angle. The phase currents from the lookup table are also sampled (at 50Khz in this case) and input into the MPC model.
 
@@ -56,7 +66,8 @@ The final aspect of the SRM model is the current calculation. The difference bet
 The asymmetric NPC discrete model takes the current time step phase current which is output from the SRM model. The phase flux linkage, electrical angle and excitation signal are also input into the block. The model generates a vector of the possible next step phase voltages as listed in the Uoutput column of Table 2.B.1.
 
 ### Table 2.B.1. Switching states of 5 Level Asymmetric NPC
-
+<div align="center">
+  
 | State | S1 | S2 | S3 | S4 | Uoutput |
 | ----- | -- | -- | -- | -- | ------- |
 | 1     | 1  | 1  | 1  | 1  | Vdc     |
@@ -69,35 +80,56 @@ The asymmetric NPC discrete model takes the current time step phase current whic
 | 8     | 0  | 0  | 1  | 0  | -0.5Vdc |
 | 9     | 0  | 0  | 0  | 0  | -Vdc    |
 
+</div>
 There are 2 possible states for 0.5Vdc, -0.5Vdc and 3 possible states for applying 0 V, these redundant states allow for better control of the charge of the capacitors as they can either charge or discharge the DC link capacitors based on the direction of the current. For example, from table 2.B.1 state 2 will result in the midpoint increasing in charge as current is flowing into the midpoint, but state 4 results in a discharge of the capacitor as the current is flowing out of the midpoint. Although the redundant states are not used in this experiment, they will be accounted for in the vector for possible future implementations.
+<br>
+<div align="center">
+  <img width="569" height="663" alt="image" src="https://github.com/user-attachments/assets/80403e9c-614a-437e-81a9-7acdac3a23ae" />
 
-**Fig. 2.B.2. Next step Electrical angle and Flux Linkage**
+**Fig. 2.B.2. Next step Electrical angle and Flux Linkage**</div>
 
 The next step electrical angle is calculated using the following equation:
-
-∅(k + n) = ∅(k) + nωT = ∅(k) + n(Nrpm · 360/60)T
+<div align="center">
+  
+  $\phi(k+n) = \phi(k) + n\omega T = \phi(k) + n\left(N_{\mathrm{rpm}}\cdot\frac{360}{60}\right)T$
+  
+</div>
 
 Where n, the size of the step, which will allow for the calculation to account for different decision intervals chosen. Since the possible voltages are stored in a vector of 9, the electrical angles are also stored in a vector of size 9.
 
 The next step flux linkage is calculated using the following equation:
+<div align="center">
+  
+$\lambda(k+n)=\lambda(k)+nT(V-IR)$
 
-λ(k + n) = λ(k) + nT(V − IR)
-
+</div>
 These next step values are input into the current lookup table from Fig 2.A.4 to get a vector of 9 possible I(K+n) values based on the possible switching configurations.
+
+<div align="center">
+<img width="824" height="106" alt="image" src="https://github.com/user-attachments/assets/6b350386-96d3-4c5e-8bf0-b601c9d25a46" />
 
 **Fig. 2.B.3. Using look up table to calculate I(K+n)**
 
+</div>
 This vector is output into the cost function to determine the best possible switch stare based on the set weightings from the current minimization and applies the associated switching states.
 
-**Fig. 2.B.4. Cost function calculation block**
+<div align="center">
+  
+<img width="1485" height="547" alt="image" src="https://github.com/user-attachments/assets/8ee1183b-37a4-4324-b29a-4091c273703e" />
 
+**Fig. 2.B.4. Cost function calculation block**
+</div>
 The 9 possible currents are subtracted from the reference current and squared. The smallest of the differences are indexed and selected by taking the largest index, since there are no other costs being considered for this experiment. Based on the vector index, the associated switching state is applied. This switching state is only applied when the excitation signal is high. When the excitation signal is low, the phase needs to be de-energized, so a negative voltage needs to be applied to drive current to 0, then a 0 V switching state needs to be applied. A new switching state is only applied after a certain number of samples; this is synced with the electrical angle and flux calculations. This allows for control of switching frequency for a reasonable comparison of performance. The cost function block outputs the states of the switches.
 
 ## C. Asymmetric 3-Level NPC
 
 To properly control an SRM with an NPC converter, the proposed Asymmetric 3-Level NPC topology (Fig. 2.C.1) in [3] is used in this model.
 
+<div align="center">
+<img width="529" height="796" alt="image" src="https://github.com/user-attachments/assets/ad726f0b-faf1-4214-a0e2-8e333eea3aa4" />
+
 **Fig. 2.C.1. Single phase leg of Asymmetric 3-Level NPC**
+</div>
 
 This topology adds freewheeling diodes to the NPC which are necessary to apply 0 V across the phase and for proper current regulation. There is a current source to simulate the coil of the SRM, controlled by the output of the “Phase Current Calculation” block in the SRM model. There is a voltage sensor measuring the phase voltage which is the input of the “Phase Current Calculation.” The DC-link capacitors are modelled with voltage sources, as capacitor balancing is not the focus of this experiment.
 

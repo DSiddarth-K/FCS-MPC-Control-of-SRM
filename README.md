@@ -146,20 +146,30 @@ The MPC controller can also be compared to the proposed PWM modulation scheme fo
 ## A. Hysteresis Controller
 
 The following results are the output of the hysteresis controller designed in [1]. With a 2% hysteresis band, using soft switching scheme. Hard switching resulted in higher steady state ripple, worse transient ripples and much higher switching frequency.
+<div align="center">
+<img width="1363" height="660" alt="image" src="https://github.com/user-attachments/assets/f7215fb7-5d7f-40c2-b863-1e54552733ba" />
 
-**Fig 3.A.1. Phase Voltage and Current Overlayed at 20A**
+**Fig 3.A.1. Phase Voltage and Current Overlayed at 20A** </div>
+<div align="center">
+<img width="1361" height="666" alt="image" src="https://github.com/user-attachments/assets/6cf52008-963d-4400-abaf-02a0c7cc7010" />
 
-**Fig 3.A.2. Current Ripple at 20A**
+**Fig 3.A.2. Current Ripple at 20A**</div>
 
 With the hysteresis controller, there are large current spikes during the initial magnetization phase where the phase voltage is applied. There is a max current ripple of around 8A, with the soft switching controller with a reference current of 20A.
 
-**Fig 3.A.3. Phase Voltage and Current Overlayed at 40A**
+<div align="center"><img width="1356" height="662" alt="image" src="https://github.com/user-attachments/assets/4e7478ab-83ea-4f87-b6dc-9795ebeabc8a" />
 
-**Fig 3.A.4. Current Ripple at 40A**
+**Fig 3.A.3. Phase Voltage and Current Overlayed at 40A**</div>
+
+<div align="center"><img width="1362" height="668" alt="image" src="https://github.com/user-attachments/assets/0b9c5d33-6e7e-4f35-9dab-8974fc4ac926" />
+
+**Fig 3.A.4. Current Ripple at 40A**</div>
 
 With a reference current of 40A, there is a max ripple of around 8A. There is a smaller overshoot from the initial magnetization but the controller struggles to maintain the reference of 40A and overshoots often.
 
-**Fig 3.A.5. Current Transient**
+<div align="center"><img width="1366" height="669" alt="image" src="https://github.com/user-attachments/assets/b1894fad-6681-4b77-b4ba-0f55c82fd771" />
+
+**Fig 3.A.5. Current Transient**</div>
 
 The controller also has a significant overshoot during transients.
 
@@ -167,43 +177,63 @@ The controller also has a significant overshoot during transients.
 
 The MPC controller decides and selects a new switching configuration every sample period. This can make the switching frequency very high and impractical, the results for when the decision is limited to every 10Khz, 50Khz and no limit are collected.
 
-**Fig 3.B.1. Current Ripple at 20A and 40A at 10Khz**
+<div align="center"><img width="1661" height="814" alt="image" src="https://github.com/user-attachments/assets/f72c41d2-d72f-4ce8-ae4c-2420e173d71b" />
+
+**Fig 3.B.1. Current Ripple at 20A and 40A at 10Khz**</div>
 
 Due to the controller making decisions and applying the switch configuration at 10Khz, the current waveform has very high ripple at both current levels and transients. There is a max ripple of 11A and 16A at 20 and 40A respectively. The initial magnetization at 40A was also difficult to regulate when the controller was forced to this low switching speed.
 
-**Fig 3.B.2. Phase Voltage and Current Overlayed at 20A, 50Khz**
+<div align="center"><img width="1652" height="803" alt="image" src="https://github.com/user-attachments/assets/d4728628-82f7-4034-8d24-5dda477a13a0" />
+
+**Fig 3.B.2. Phase Voltage and Current Overlayed at 20A, 50Khz**</div>
 
 When the controller was forced to switch at 50Khz, the waveforms smoothed, and current looked much more stable.
 
-**Fig 3.B.3. Current Ripple at 20A, 50Khz**
+<div align="center"><img width="1663" height="807" alt="image" src="https://github.com/user-attachments/assets/da3dd1c1-3078-4e99-884f-49559b2c363a" />
+
+**Fig 3.B.3. Current Ripple at 20A, 50Khz**</div>
 
 There is no overshoot with this controller at 20A, but it does not reach the reference current value in the initial magnetization. The max ripple was 3.5A.
 
-**Fig 3.B.4. Phase Voltage and Current Overlayed at 40A, 50Khz**
+<div align="center"><img width="1649" height="801" alt="image" src="https://github.com/user-attachments/assets/74df5523-b0ea-48bd-ac7f-e8eb416e9585" />
+
+**Fig 3.B.4. Phase Voltage and Current Overlayed at 40A, 50Khz**</div>
 
 At 40A, the controller switched more often than at 20A.
 
-**Fig 3.B.5. Current Ripple at 40A, 50Khz**
+<div align="center"><img width="1665" height="815" alt="image" src="https://github.com/user-attachments/assets/ec5bc07f-35b1-44f2-b61b-4ec5a11415e8" />
+
+**Fig 3.B.5. Current Ripple at 40A, 50Khz**</div>
 
 The initial magnetization does not result in the current meeting the reference value, the peak ripple was 8A.
 
-**Fig 3.B.6. Current Transient, 50Khz**
+<div align="center"><img width="1373" height="676" alt="image" src="https://github.com/user-attachments/assets/d88f66ab-a74a-4af5-969d-4093954d5ca9" />
+ 
+**Fig 3.B.6. Current Transient, 50Khz**</div>
 
 The current transient does not result in any overshoots.
 
-**Fig 3.B.7. Phase Voltage and Current Overlayed at 40A**
+<div align="center"><img width="1362" height="660" alt="image" src="https://github.com/user-attachments/assets/b0499cd9-9574-4197-9992-9f2e77b5a426" />
+
+**Fig 3.B.7. Phase Voltage and Current Overlayed at 40A**</div>
 
 Where the controller is not limited to a certain switching/decision frequency, it has a very high switching frequency.
 
-**Fig 3.B.8. Current Ripple at 20A**
+<div align="center"><img width="1376" height="673" alt="image" src="https://github.com/user-attachments/assets/8acd68d3-c61c-425f-866c-426248afa512" />
+
+**Fig 3.B.8. Current Ripple at 20A**</div>
 
 The max current ripple at 20A is less than 0.5A, there is very little ripple at all.
 
-**Fig 3.B.9. Current Ripple at 40A**
+<div align="center"><img width="1368" height="675" alt="image" src="https://github.com/user-attachments/assets/01838a9b-1961-40bb-9b41-2468f5597e3a" />
+
+**Fig 3.B.9. Current Ripple at 40A**</div>
 
 At 40A, there is a max current ripple of 0.5A.
 
-**Fig 3.B.10. Current Transients**
+<div align="center"><img width="1372" height="677" alt="image" src="https://github.com/user-attachments/assets/2f081388-4978-4da9-938b-159e9277ddd5" />
+
+**Fig 3.B.10. Current Transients**</div>
 
 The transient current waveforms are also very smooth and have a ripple of less than 1A.
 
